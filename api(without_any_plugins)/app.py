@@ -38,7 +38,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:@localhost/stock"
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///arzaq.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -55,13 +56,15 @@ class Book(db.Model):
         self.author = author
         self.genre = genre
 
+db.create_all()
+
 # http://localhost:5000/books
 @app.route('/books', methods=['GET', 'POST'])
 def add_get_books():
     if request.method == 'POST':
-        book_title = request.json['title']
-        book_author = request.json['author']
-        book_genre = request.json['genre']
+        book_title = request.get_json(force = True)['title']
+        book_author = request.get_json(force = True)['author']
+        book_genre = request.get_json(force = True)['genre']
 
         new_book = Book(book_title,book_author,book_genre)
 
@@ -92,10 +95,9 @@ def get_book(book_id):
 # http://localhost:5000/books/3 (PUT)
 @app.route('/books/<int:book_id>', methods=['PUT'])
 def update_book(book_id):
-
-    book_title = request.json['title']
-    book_author = request.json['author']
-    book_genre = request.json['genre']
+    book_title = request.get_json(force=True)['title']
+    book_author = request.get_json(force=True)['author']
+    book_genre = request.get_json(force=True)['genre']
 
     Book.query.filter_by(id=book_id).update({'title': book_title, 'author': book_author, 'genre': book_genre})
 
@@ -113,3 +115,7 @@ def delete_book(book_id):
     db.session.commit()
 
     return 'deleted', 200
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
